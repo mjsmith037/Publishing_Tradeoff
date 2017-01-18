@@ -116,13 +116,13 @@ def get_all_papers(scopus1, scopus2, scopus3, counter):
 """Open a csv file containing the Scopus IDs to search for (with synonymous IDs
    ;-delimited on the same line, and nonsynonymous IDs separated by newlines)
    and loop through the file, calling 'get_all_papers()' for each ID"""
-with open("../inputs/Members_SelectedSections.csv") as in_file:
+with open("../Inputs/NAS_ScopusID.csv") as in_file:
     ## read in as dictionary
     all_rows = csv.DictReader(in_file, delimiter = ";")
     counter = 1
     for row in allrows:
         ## progress indicating output
-        print(counter, row["FullName"], row["Section"], row["Scopus1"],row["Scopus2"],row["Scopus3"])
+        print(counter, row["Scopus1"],row["Scopus2"],row["Scopus3"])
         ## analyze the Scopus IDs for each author
         get_all_papers(row["Scopus1"], row["Scopus2"], row["Scopus3"], counter)
         counter = counter + 1
