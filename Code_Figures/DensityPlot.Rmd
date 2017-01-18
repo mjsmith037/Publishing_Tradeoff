@@ -1,6 +1,6 @@
 ---
 title: 'Figures 2, S1 for:'
-subtitle: 'TBD'
+subtitle: '"And, not Or: Quantity, Quality in Scientific Publishing"'
 author: 'Matthew J. Michalska-Smith & Stefano Allesina'
 output: 
   html_document: 

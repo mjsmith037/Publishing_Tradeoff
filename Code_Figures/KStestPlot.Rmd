@@ -1,6 +1,6 @@
 ---
 title: 'Figure S2, Table 1, S1 for:'
-subtitle: 'TBD'
+subtitle: '"And, not Or: Quantity, Quality in Scientific Publishing"'
 author: 'Matthew J. Michalska-Smith & Stefano Allesina'
 output: 
   html_document: 
@@ -74,42 +74,44 @@ kable(table_data, align=c("r", "c", "c", "c", "c", "c"))
 ks_rand <- tibble()
 for (ss in unique(results$sum_stat)) {
     for (ny in unique(results$nyears)) {
-        ks_rand <- bind_rows(ks_rand,
-                             ## perform a two-sample Kolmogorov–Smirnov test comparing the distributions
-                             ks.test(results %>%
-                                         filter(sum_stat == ss, rand == TRUE,nyears == ny) %>%
-                                         .$concordance,
-                                     results %>%
-                                         filter(sum_stat == ss, rand == FALSE, nyears == ny) %>%
-                                         .$concordance) %>%
-                                 glance %>%
-                                 select(statistic, p.value) %>%
-                                 mutate(sum_stat=ss, nyears=ny, transformation="none"),
-                             ## redo the test, accounting for the difference in means identified by the t-test
-                             ks.test(results %>%
-                                         filter(sum_stat == ss, rand == TRUE,nyears == ny) %>%
-                                         .$concordance,
-                                     results %>%
-                                         filter(sum_stat == ss, rand == FALSE, nyears == ny) %>%
-                                         .$concordance +
-                                         t_rand %>%
-                                         filter(sum_stat == ss, nyears == ny) %>%
-                                         .$estimate) %>%
-                                 glance %>%
-                                 select(statistic, p.value) %>%
-                                 mutate(sum_stat=ss, nyears=ny, transformation="shifted mean"),
-                             ## redo the test, rescaling to normalize two distributions
-                             ks.test(results %>%
-                                         filter(sum_stat == ss, rand == TRUE,nyears == ny) %>%
-                                         .$concordance %>%
-                                         standard_transform,
-                                     results %>%
-                                         filter(sum_stat == ss, rand == FALSE, nyears == ny) %>%
-                                         .$concordance %>%
-                                         standard_transform) %>%
-                                 glance %>%
-                                 select(statistic, p.value) %>%
-                                 mutate(sum_stat=ss, nyears=ny, transformation="mean 0, sd 1"))
+        ks_rand <- bind_rows(
+            ks_rand,
+            ## perform a two-sample Kolmogorov–Smirnov test comparing the distributions
+            ks.test(results %>%
+                        filter(sum_stat == ss, rand == TRUE,nyears == ny) %>%
+                        .$concordance,
+                    results %>%
+                        filter(sum_stat == ss, rand == FALSE, nyears == ny) %>%
+                        .$concordance) %>%
+                glance %>%
+                select(statistic, p.value) %>%
+                mutate(sum_stat=ss, nyears=ny, transformation="none"),
+            ## redo the test, accounting for the difference in means identified by the t-test
+            ks.test(results %>%
+                        filter(sum_stat == ss, rand == TRUE,nyears == ny) %>%
+                        .$concordance,
+                    results %>%
+                        filter(sum_stat == ss, rand == FALSE, nyears == ny) %>%
+                        .$concordance +
+                        t_rand %>%
+                        filter(sum_stat == ss, nyears == ny) %>%
+                        .$estimate) %>%
+                glance %>%
+                select(statistic, p.value) %>%
+                mutate(sum_stat=ss, nyears=ny, transformation="shifted mean"),
+            ## redo the test, rescaling to normalize two distributions
+            ks.test(results %>%
+                        filter(sum_stat == ss, rand == TRUE,nyears == ny) %>%
+                        .$concordance %>%
+                        standard_transform,
+                    results %>%
+                        filter(sum_stat == ss, rand == FALSE, nyears == ny) %>%
+                        .$concordance %>%
+                        standard_transform) %>%
+                glance %>%
+                select(statistic, p.value) %>%
+                mutate(sum_stat=ss, nyears=ny, transformation="mean 0, sd 1")
+        )
     }
 }
 ## re-order the transformation levels
