@@ -1,0 +1,99 @@
+---
+title: 'Figures 2, S1 for:'
+subtitle: 'TBD'
+author: 'Matthew J. Michalska-Smith & Stefano Allesina'
+output: 
+  html_document: 
+    highlight: pygments
+---
+
+## Import libraries
+```{r, message=FALSE}
+library(knitr)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+library(stringr)
+```
+
+## Global parameters
+```{r}
+INTERVAL_START <- 1991
+INTERVAL_END <- 2010
+cols <- c("#6780d8", "#b84c3e")
+```
+
+## Read in the data for plotting
+```{r}
+load(paste0("../Figures/PairwiseComparison_", INTERVAL_START, "-", INTERVAL_END, ".RData"))
+```
+
+## Some aesthetic restructuring
+```{r}
+results <- results %>%
+    mutate(rand = factor(ifelse(rand,
+                                "Randomized",
+                                "National Academy Scientists          ")),
+           concordance = concordance-(1-concordance))
+```
+
+# Plotting
+## Figure 1
+```{r}
+ggplot(results %>% filter(sum_stat != "All Pairs", nyears == 1)) +
+    aes(y=concordance, x=rand, colour=rand, fill=rand) +
+    geom_violin() +
+    geom_hline(yintercept=0) +
+    geom_boxplot(width=0.2, alpha=0.5, fill="white", colour="black", outlier.stroke=0.5) +
+    scale_linetype_identity() +
+    scale_colour_manual(values=cols) + scale_fill_manual(values=cols) +
+    ylab("Correlation between Quality and Quantity") +
+    facet_wrap(~sum_stat, nrow=1) +
+    theme_bw() + theme(legend.position   = "bottom",
+                       legend.title      = element_blank(),
+                       legend.background = element_blank(),
+                       axis.text.x       = element_blank(),
+                       axis.title.x      = element_blank(),
+                       axis.ticks.x      = element_blank())
+ggsave(paste0("../Figures/Figure1_", INTERVAL_START, "-", INTERVAL_END, ".pdf"),
+       width=9.75, height=5.25)
+```
+Violin plots of the strength of pairwise correlation between quantity and quality
+for members of the National Academy of Sciences.  The panels are divided based on
+which summary statistic is being compared across years. A value of 1 (-1) indicates
+that, for every pair of adjacent years, the more productive one had a higher
+(lower) statistic (\emph{e.g.} maximally cited paper published in that
+year). A value of $0$ (horizontal black line) indicates that the larger statistic
+is equally likely to be from the more or less productive year. In blue (left in
+each plot) are the empirically observed correlation values for each author. In red
+(right in each plot) are the correlation values observed when citation counts were
+randomized within each author's corpus.
+
+## Figure S1
+```{r}
+ggplot(results %>% filter(sum_stat != "All Pairs", nyears == 1)) +
+    aes(y=concordance, x=rand, colour=rand, fill=rand) +
+    geom_violin() +
+    geom_hline(yintercept=0) +
+    geom_boxplot(width=0.2, alpha=0.5, fill="white", colour="black", outlier.stroke=0.5) +
+    geom_segment(aes(x=as.integer(xx)-0.1, xend=as.integer(xx)+0.1, yend=concordance),
+                 data=results %>%
+                     mutate(xx=as.factor(ifelse(rand == levels(rand)[1],
+                                                levels(rand)[2],
+                                                levels(rand)[1]))) %>%
+                     group_by(nyears, sum_stat, rand, xx) %>%
+                     summarise(concordance = median(concordance))) +
+    scale_linetype_identity() +
+    scale_colour_manual(values=cols) + scale_fill_manual(values=cols) +
+    ylab("Correlation between Quality and Quantity") +
+    facet_grid(nyears~sum_stat) +
+    theme_bw() + theme(legend.position   = "bottom",
+                       legend.title      = element_blank(),
+                       legend.background = element_blank(),
+                       axis.text.x       = element_blank(),
+                       axis.title.x      = element_blank(),
+                       axis.ticks.x      = element_blank())
+ggsave(paste0("../Figures/PairwiseComparison_", INTERVAL_START, "-", INTERVAL_END, ".pdf"),
+       width=15, height=10)
+```
+Add caption.

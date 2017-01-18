@@ -1,0 +1,183 @@
+---
+title: 'Figure S2, Table 1, S1 for:'
+subtitle: 'TBD'
+author: 'Matthew J. Michalska-Smith & Stefano Allesina'
+output: 
+  html_document: 
+    highlight: pygments
+---
+
+## Import libraries
+```{r, message=FALSE}
+library(knitr)
+library(broom)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(stringr)
+```
+
+## Global parameters
+```{r}
+INTERVAL_START <- 1991
+INTERVAL_END <- 2010
+
+## define a transformation which results in a distribution with mean 0 and variance 1
+standard_transform <- function(vv) ((vv - mean(vv)) / sd(vv))
+```
+
+## Read in the data for plotting
+```{r}
+load(paste0("../Figures/PairwiseComparison_", INTERVAL_START, "-", INTERVAL_END, ".RData"))
+```
+
+# T-test
+```{r}
+## test for significant difference between means
+t_rand <- tibble()
+for (ss in unique(results$sum_stat)) {
+    for (ny in unique(results$nyears)) {
+        t_rand <- bind_rows(t_rand,
+                            t.test(results %>%
+                                       filter(sum_stat == ss, rand == TRUE, nyears == ny) %>%
+                                       .$concordance,
+                                   results %>%
+                                       filter(sum_stat == ss, rand == FALSE, nyears == ny) %>%
+                                       .$concordance) %>%
+                                glance %>%
+                                select(estimate, statistic, p.value) %>%
+                                mutate(sum_stat=ss, nyears=ny))
+    }
+}
+```
+
+## Table S1
+How do the means of the two distributions (randomized or not) compare?
+A positive value indicates that the mean of the randomized sample is greater.
+
+```{r}
+table_data <- t_rand %>%
+    mutate(estimate = format(round(estimate, 2), nsmall=2),
+           p.value = ifelse(p.value < .001, "***",
+                            ifelse(p.value < .01, "** ",
+                                   ifelse(p.value < .05, "*  ", "   "))),
+           effect = paste0(estimate, p.value),
+           sum_stat = str_extract(sum_stat, "\\w+")) %>%
+    select(-estimate, -p.value, -statistic) %>%
+    spread(sum_stat, effect)
+kable(table_data, align=c("r", "c", "c", "c", "c", "c"))
+```
+
+# Kolmogorov-Smirnov Test
+```{r warning=FALSE}
+## test for significant differences between distributions
+ks_rand <- tibble()
+for (ss in unique(results$sum_stat)) {
+    for (ny in unique(results$nyears)) {
+        ks_rand <- bind_rows(ks_rand,
+                             ## perform a two-sample Kolmogorov–Smirnov test comparing the distributions
+                             ks.test(results %>%
+                                         filter(sum_stat == ss, rand == TRUE,nyears == ny) %>%
+                                         .$concordance,
+                                     results %>%
+                                         filter(sum_stat == ss, rand == FALSE, nyears == ny) %>%
+                                         .$concordance) %>%
+                                 glance %>%
+                                 select(statistic, p.value) %>%
+                                 mutate(sum_stat=ss, nyears=ny, transformation="none"),
+                             ## redo the test, accounting for the difference in means identified by the t-test
+                             ks.test(results %>%
+                                         filter(sum_stat == ss, rand == TRUE,nyears == ny) %>%
+                                         .$concordance,
+                                     results %>%
+                                         filter(sum_stat == ss, rand == FALSE, nyears == ny) %>%
+                                         .$concordance +
+                                         t_rand %>%
+                                         filter(sum_stat == ss, nyears == ny) %>%
+                                         .$estimate) %>%
+                                 glance %>%
+                                 select(statistic, p.value) %>%
+                                 mutate(sum_stat=ss, nyears=ny, transformation="shifted mean"),
+                             ## redo the test, rescaling to normalize two distributions
+                             ks.test(results %>%
+                                         filter(sum_stat == ss, rand == TRUE,nyears == ny) %>%
+                                         .$concordance %>%
+                                         standard_transform,
+                                     results %>%
+                                         filter(sum_stat == ss, rand == FALSE, nyears == ny) %>%
+                                         .$concordance %>%
+                                         standard_transform) %>%
+                                 glance %>%
+                                 select(statistic, p.value) %>%
+                                 mutate(sum_stat=ss, nyears=ny, transformation="mean 0, sd 1"))
+    }
+}
+## re-order the transformation levels
+ks_rand$transformation <- factor(ks_rand$transformation, levels = c("none", "shifted mean", "mean 0, sd 1"))
+```
+
+## Table 1 (and related)
+```{r}
+table_data <- ks_rand %>%
+    mutate(formatted_statistic = str_c(format(round(statistic, 2), nsmall=2),
+                                       ifelse(p.value < .001, "***",
+                                              ifelse(p.value < .01, "** ",
+                                                     ifelse(p.value < .05, "*  ", "   ")))),
+           sum_stat = str_extract(sum_stat, "\\w+")) %>%
+    select(-statistic, -p.value) %>%
+    spread(sum_stat, formatted_statistic) %>%
+    arrange(transformation) %>%
+    filter(transformation == "none") %>%
+    select(-transformation) %>%
+    tbl_df()
+kable(table_data)
+```
+
+```{r}
+## how does shifting the mean affect the p.value?
+table_data <- ks_rand %>%
+    mutate(formatted_statistic = str_c(format(round(statistic, 2), nsmall=2),
+                                       ifelse(p.value < .001, "***",
+                                              ifelse(p.value < .01, "** ",
+                                                     ifelse(p.value < .05, "*  ", "   ")))),
+           sum_stat = str_extract(sum_stat, "\\w+")) %>%
+    select(-statistic, -p.value) %>%
+    spread(sum_stat, formatted_statistic) %>%
+    arrange(transformation) %>%
+    filter(transformation == "shifted mean") %>%
+    select(-transformation) %>%
+    tbl_df()
+kable(table_data)
+```
+
+```{r}
+## how does transforming the distributions affect the p-value
+table_data <- ks_rand %>%
+    mutate(formatted_statistic = str_c(format(round(statistic, 2), nsmall=2),
+                                       ifelse(p.value < .001, "***",
+                                              ifelse(p.value < .01, "** ",
+                                                     ifelse(p.value < .05, "*  ", "   ")))),
+           sum_stat = str_extract(sum_stat, "\\w+")) %>%
+    select(-statistic, -p.value) %>%
+    spread(sum_stat, formatted_statistic) %>%
+    arrange(transformation) %>%
+    filter(transformation == "mean 0, sd 1") %>%
+    select(-transformation) %>%
+    tbl_df()
+kable(table_data)
+```
+
+## Figure S2
+Another way to view the same thing (points below the black line are non-significant):
+```{r}
+ggplot(ks_rand) +
+    aes(x=as.factor(nyears), y=-log10(p.value), colour=transformation, shape=transformation) +
+    geom_point(stroke=1) +
+    geom_hline(yintercept=-log10(0.05)) +
+    facet_wrap(~sum_stat, ncol=1) +
+    scale_shape_manual(values=c(1,3,4)) +
+    xlab("Size of sliding window") +
+    theme_bw() + theme(legend.position=c(0.1,0.96),
+                       legend.title=element_blank(),
+                       legend.background=element_blank())
+```
