@@ -1,6 +1,8 @@
 # Code to Replicate Analsis for: "And, not Or: Quantity, Quality in Scientific Publishing"
 ### Matthew J. Michalska-Smith and Stefano Allesina
 
+---------------------------------------------------
+
 ## Data Collection
 
 A python script for extracting publication records associated with Scopus IDs is
