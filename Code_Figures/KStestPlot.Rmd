@@ -24,6 +24,13 @@ INTERVAL_END <- 2010
 
 ## define a transformation which results in a distribution with mean 0 and variance 1
 standard_transform <- function(vv) ((vv - mean(vv)) / sd(vv))
+
+## helpful function for making significance easier to read
+pretty_sig <- function(pvals) {
+    ifelse(p.value < .001, "***",
+           ifelse(p.value < .01, "** ",
+                  ifelse(p.value < .05, "*  ", "   ")))
+}
 ```
 
 ## Read in the data for plotting
@@ -58,9 +65,7 @@ A positive value indicates that the mean of the randomized sample is greater.
 ```{r}
 table_data <- t_rand %>%
     mutate(estimate = format(round(estimate, 2), nsmall=2),
-           p.value = ifelse(p.value < .001, "***",
-                            ifelse(p.value < .01, "** ",
-                                   ifelse(p.value < .05, "*  ", "   "))),
+           p.value = ,
            effect = paste0(estimate, p.value),
            sum_stat = str_extract(sum_stat, "\\w+")) %>%
     select(-estimate, -p.value, -statistic) %>%
@@ -122,9 +127,7 @@ ks_rand$transformation <- factor(ks_rand$transformation, levels = c("none", "shi
 ```{r}
 table_data <- ks_rand %>%
     mutate(formatted_statistic = str_c(format(round(statistic, 2), nsmall=2),
-                                       ifelse(p.value < .001, "***",
-                                              ifelse(p.value < .01, "** ",
-                                                     ifelse(p.value < .05, "*  ", "   ")))),
+                                       pretty_sig(p.value)),
            sum_stat = str_extract(sum_stat, "\\w+")) %>%
     select(-statistic, -p.value) %>%
     spread(sum_stat, formatted_statistic) %>%
@@ -138,10 +141,8 @@ kable(table_data)
 ```{r}
 ## how does shifting the mean affect the p.value?
 table_data <- ks_rand %>%
-    mutate(formatted_statistic = str_c(format(round(statistic, 2), nsmall=2),
-                                       ifelse(p.value < .001, "***",
-                                              ifelse(p.value < .01, "** ",
-                                                     ifelse(p.value < .05, "*  ", "   ")))),
+    mutate(formatted_statistic = str_c(format(round(statistic, 2), nsmall=2), 
+                                       pretty_sig(p.value)),
            sum_stat = str_extract(sum_stat, "\\w+")) %>%
     select(-statistic, -p.value) %>%
     spread(sum_stat, formatted_statistic) %>%
@@ -156,9 +157,7 @@ kable(table_data)
 ## how does transforming the distributions affect the p-value
 table_data <- ks_rand %>%
     mutate(formatted_statistic = str_c(format(round(statistic, 2), nsmall=2),
-                                       ifelse(p.value < .001, "***",
-                                              ifelse(p.value < .01, "** ",
-                                                     ifelse(p.value < .05, "*  ", "   ")))),
+                                       pretty_sig(p.value)),
            sum_stat = str_extract(sum_stat, "\\w+")) %>%
     select(-statistic, -p.value) %>%
     spread(sum_stat, formatted_statistic) %>%
