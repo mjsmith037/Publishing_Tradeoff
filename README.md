@@ -26,15 +26,14 @@ beginning of the file:
 
 | Parameter    | Default Value | Definition                                        |
 |--------------|---------------|---------------------------------------------------|
-INTERVAL_START | 1991          | earliest year to consider publications from       |
-INTERVAL_END   | 2010          | latest year to consider publications from         |
+INTERVAL_START | 1980          | earliest year to consider publications from       |
+INTERVAL_END   | 2006          | latest year to consider publications from         |
 MINPAPERS      | 20            | the minimum number of publications an author must have within the interval to be included |
-
-For our analysis, we also ran it with `INTERVAL_END <- 2001` and `INTERVAL_END <- 2005`.
+QUALITY_TRANS  | "log"         | the transformation (if any) to perform on citations to make them a quality metric |
 
 This will produce a data file located at
 
-`Figures/PairwiseComparison_[INTERVAL_START]-[INTERVAL_END].RData`
+`Figures/PairwiseComparison_[QUALITY_TRANS]_[INTERVAL_START]-[INTERVAL_END].RData`
 
 to be used in the figure generation scripts.
 
@@ -43,4 +42,4 @@ to be used in the figure generation scripts.
 Figures and tables associated with the analysis can be found in the `Code_Figures`
 folder. These two scripts `DensityPlot.Rmd` and `KStestPlot.Rmd` plot the density
 distributions of the concordance values and statistical comparisons between the
-distributions, respectively.
+distributions, respectively. The latter also produces the tables found in the text.
