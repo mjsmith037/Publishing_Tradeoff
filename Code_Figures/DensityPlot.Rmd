@@ -20,12 +20,14 @@ library(stringr)
 ```{r}
 INTERVAL_START <- 1991
 INTERVAL_END <- 2010
+QUALITY_TRANS <- "log"
 cols <- c("#6780d8", "#b84c3e")
 ```
 
 ## Read in the data for plotting
 ```{r}
-load(paste0("../Figures/PairwiseComparison_", INTERVAL_START, "-", INTERVAL_END, ".RData"))
+load(paste0("../figures/PairwiseComparison_", QUALITY_TRANS,
+            "_", INTERVAL_START, "-", INTERVAL_END, ".RData"))
 ```
 
 ## Some aesthetic restructuring
