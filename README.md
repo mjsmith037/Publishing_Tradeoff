@@ -18,12 +18,6 @@ folder to be utilized in the further analysis. Each of these files will be a
 
 `Author;PaperID;Citations;Year;Journal`
 
-In order to facilitate replication, we also provide the actual data used in our
-analysis with the author and paper identifiers anonymized. These files have six
-digit codes replacing the ScopusIDs of the authors and the PaperIDs of each of
-their publications and do not include journal information, but are otherwise
-identical to the output of `Retrieve_papers.py`.
-
 ## Basic Pairwise Analysis
 
 This part of the analysis involves running the script `PairwiseComparision.R`,
